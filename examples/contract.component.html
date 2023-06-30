@@ -1,0 +1,17 @@
+<vex-aio-table
+    [pageTitle]="aioTableConfig.pageTitle"
+    [pageCrumbs]="aioTableConfig.pageCrumbs"
+    [entityNameSingular]="aioTableConfig.entityNameSingular"
+    [entityNamePlurial]="aioTableConfig.entityNamePlurial"
+    [columns]="aioTableConfig.columns"
+    [exportOptions]="aioTableConfig.exportOptions"
+    [addToolText]="aioTableConfig.addToolText"
+    [updateItemFunction]="updateItem.bind(this)"
+    [createItemFunction]="createItem.bind(this)"
+    [findItemsFunction]="findItemsFunction.bind(this)"
+    [form]="form"
+    [openFilterFormFunction]="openFilterForm.bind(this)"
+    [doLoadItemsPage]="doLoadItemsPage"
+    [layout]="(datatable$|async)?.layout??'boxed'"
+    [layoutUpdateFunction]="layoutUpdateFunction.bind(this)"
+></vex-aio-table>

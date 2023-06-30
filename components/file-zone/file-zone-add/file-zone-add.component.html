@@ -1,0 +1,4 @@
+<div class="empty" (click)="open()">
+    <mat-icon svgIcon="mat:add"></mat-icon>
+    <input type="file" #file (change)="choose($event)" [size]="maxFileSize" [accept]="accept" [multiple]="multiple"/>
+</div>

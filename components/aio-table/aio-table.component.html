@@ -1,0 +1,513 @@
+<vex-page-layout>
+
+  <vex-page-layout-header class="pb-16 flex flex-col items-start justify-center">
+    <div [class.container]="layout === 'boxed'"
+         [class.px-gutter]="layout === 'fullwidth'"
+         class="w-full flex flex-col sm:flex-row justify-between">
+      <div>
+        <h1 class="title mt-0 mb-1">{{ pageTitle }}</h1>
+        <vex-breadcrumbs [crumbs]="pageCrumbs"></vex-breadcrumbs>
+      </div>
+
+      <div class="hidden sm:block">
+        <mat-button-toggle-group [formControl]="layoutCtrl" class="mt-4 sm:mt-0">
+          <mat-button-toggle value="boxed">En boîte</mat-button-toggle>
+          <mat-button-toggle value="fullwidth">Pleine largeur</mat-button-toggle>
+        </mat-button-toggle-group>
+      </div>
+    </div>
+  </vex-page-layout-header>
+
+  <vex-page-layout-content [class.container]="layout === 'boxed'"
+                           [class.px-gutter]="layout === 'fullwidth'"
+                           class="-mt-6">
+
+    <div class="card overflow-auto -mt-16">
+      <div class="bg-app-bar px-6 h-16 border-b sticky left-0 flex items-center">
+        <h2 class="title my-0 ltr:pr-4 rtl:pl-4 ltr:mr-4 rtl:ml-4 ltr:border-r rtl:border-l hidden sm:block flex-none">
+          <span *ngIf="selection.isEmpty()">{{ entityNamePlurial }}</span>
+          <span *ngIf="selection.hasValue()">{{ selection?.selected?.length }}
+            {{ selection?.selected?.length > 1 ? entityNamePlurial : entityNameSingular }} selectionnés</span>
+        </h2>
+
+        <div *ngIf="selection.hasValue()" class="mr-4 pr-4 border-r flex-none">
+          <button (click)="deleteItems(selection.selected)"
+                  color="primary"
+                  mat-icon-button
+                  matTooltip="Delete selected"
+                  type="button">
+            <mat-icon svgIcon="mat:delete"></mat-icon>
+          </button>
+
+          <button color="primary" mat-icon-button matTooltip="Another action" type="button">
+            <mat-icon svgIcon="mat:folder"></mat-icon>
+          </button>
+        </div>
+
+        <div *ngIf="form?.formGroup" [formGroup]="form?.formGroup" class="bg-foreground rounded-full border px-4 max-w-[300px] flex-auto flex items-center border border-gray-300">
+            <mat-icon class="icon-sm text-secondary" svgIcon="mat:search"></mat-icon>
+            <input formControlName="content"
+                  class="px-4 py-2 border-0 outline-none w-full bg-transparent"
+                  placeholder="Rechercher..."
+                  type="search">
+        </div>
+
+        <span class="flex-1">
+          <mat-chip-list class="chip-list" *ngIf="form?.formGroup">
+            <mat-basic-chip
+              (click)="openFilterForm()"
+              class="chip-filter px-4 bg-foreground rounded-full border border-gray-300">
+              <div class="chip-content">
+                Filtres
+
+                <button class="ml-2">
+                  <mat-icon svgIcon="mat:edit"></mat-icon>
+                </button>
+              </div>
+            </mat-basic-chip>
+            <div class="basic-chip-pastille" *ngIf="filtersCount">{{ filtersCount }} </div>
+          </mat-chip-list>
+
+          <mat-menu #menu="matMenu">
+            <button mat-menu-item>
+              <mat-icon>dialpad</mat-icon>
+              <span>Redial</span>
+            </button>
+            <button mat-menu-item disabled>
+              <mat-icon>voicemail</mat-icon>
+              <span>Check voice mail</span>
+            </button>
+            <button mat-menu-item>
+              <mat-icon>notifications_off</mat-icon>
+              <span>Disable alerts</span>
+            </button>
+          </mat-menu>
+        </span>
+
+        <button [matMenuTriggerFor]="exportOptionMenu"
+                *ngIf="exportOptions?.length > 0"
+                class="ml-4 flex-none"
+                mat-icon-button
+                matTooltip="Exporter les données"
+                type="button"
+                [disabled]="isShimmering">
+          <mat-icon svgIcon="mat:cloud_download"></mat-icon>
+        </button>
+
+        <button [matMenuTriggerFor]="columnFilterMenu"
+                class="ml-4 flex-none"
+                mat-icon-button
+                matTooltip="Filtrer les colonnes"
+                type="button">
+          <mat-icon svgIcon="mat:filter_list"></mat-icon>
+        </button>
+
+        <button (click)="!isShimmering?createItemFunction(onFilterChange.bind(this)):null"
+                class="ml-4 flex-none"
+                color="primary"
+                mat-mini-fab
+                [matTooltip]="addToolText"
+                type="button">
+          <mat-icon svgIcon="mat:add"></mat-icon>
+        </button>
+      </div>
+
+      <table @stagger [dataSource]="dataSource" class="w-full" mat-table matSort>
+          <!--- Note that these columns can be defined in any order.
+                The actual rendered columns are set as a property on the row definition" -->
+
+          <!-- Columns Looping -->
+          <ng-container *ngFor="let column of columns; trackBy: trackByProperty">
+            
+            <!-- Text Columns -->
+            <ng-container *ngIf="column.type === 'text'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="text uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="text uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row" class="text" [ngClass]="column.cssClasses" mat-cell
+                  [matTooltip]="row[column.property]"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null">
+                  <ng-container *ngIf="!isShimmering; else textShimmering">
+                    <div [innerHTML]="(column?.config?.text?.maxLength && row[column.property]?.length > column?.config?.text?.maxLength ) ? (row[column.property] | slice:0:column?.config?.text?.maxLength) + ' ..':(row[column.property])"></div>
+                  </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Text Column -->  
+
+            <!-- Boolean Columns -->
+            <ng-container *ngIf="column.type === 'boolean'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row" [ngClass]="column.cssClasses" mat-cell
+                  [matTooltip]="row[column.property]"
+                  [matTooltipDisabled]="!column?.config?.text?.maxLength || !(column?.config?.text?.maxLength && row[column.property]?.length > column?.config?.text?.maxLength)"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null">
+                  <ng-container *ngIf="!isShimmering; else textShimmering">
+                    <div [innerHTML]="row[column.property] ? 'Oui' : 'Non'"></div>
+                  </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Boolean Column -->
+                    
+            <!-- Date Columns -->
+            <ng-container *ngIf="column.type === 'date'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  [ngClass]="column.cssClasses"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div [innerHTML]="row[column.property]|date:(
+                    column?.config?.date?.format ?
+                    column?.config?.date?.format
+                    :
+                    'd/MM/Y HH:mm'
+                  )"></div>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Date Column -->
+      
+            <!-- Enum Columns -->
+            <ng-container *ngIf="column.type === 'enum'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  [ngClass]="column.cssClasses"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div [ngClass]="[column?.config?.enum[row[column.property]]?.cssClass]"
+                      class="rounded px-2 py-1 font-medium text-xs flex-none text-center"
+                      [innerHTML]="column?.config?.enum[row[column.property]]?.text">
+                  </div>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Enum Column -->
+
+            <!-- Image Column -->
+            <ng-container *ngIf="column.type === 'image'" [matColumnDef]="column.property">
+              <th *matHeaderCellDef mat-header-cell></th>
+              <td *matCellDef="let row"
+                  class="w-8 min-w-8 pr-0"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else imageShimmering">
+                  <img *ngIf="row[column.property]; else imagePlaceholder" [src]="row[column.property]" class="avatar h-8 w-8 align-middle">
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Image Column -->
+
+            <!-- Labels Column -->
+            <ng-container *ngIf="column.type === 'tag'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div (click)="$event.stopPropagation()" class="flex items-center gap-1">
+                    <div *ngFor="let label of row[column.property]"
+                        [ngClass]="[label.textClass, label.bgClass]"
+                        class="rounded px-2 py-1 font-medium text-xs flex-none">
+                      {{ label.text }}
+                    </div>
+                    <div (click)="labelSelect.open()"
+                        class="text-secondary bg-base text-hint cursor-pointer hover:bg-hover flex-none flex items-center justify-center">
+                      <mat-icon class="icon-sm" svgIcon="mat:add"></mat-icon>
+                    </div>
+                    <mat-select #labelSelect="matSelect"
+                                (selectionChange)="onLabelChange($event, row, column.property)"
+                                [value]="row[column.property]"
+                                class="invisible w-0 h-0 text-sm shrink"
+                                multiple>
+                      <mat-option *ngFor="let label of labels" [value]="label">
+                        <div [ngClass]="label.previewClass"
+                            class="h-6 w-6 align-middle ltr:mr-2 rtl:ml-2 rounded inline-block"></div>
+                        <span>{{ label.text }}</span>
+                      </mat-option>
+                    </mat-select>
+                  </div>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Labels Column -->
+
+            <!-- Checkbox Column -->
+            <ng-container *ngIf="column.type === 'checkbox'" [matColumnDef]="column.property">
+              <th *matHeaderCellDef mat-header-cell>
+                <mat-checkbox (change)="$event ? masterToggle() : null"
+                              [checked]="selection.hasValue() && isAllSelected()"
+                              [indeterminate]="selection.hasValue() && !isAllSelected()"
+                              color="primary">
+                </mat-checkbox>
+              </th>
+              <td *matCellDef="let row"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  class="w-4"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else checkboxShimmering">
+                  <mat-checkbox (change)="$event ? selection.toggle(row) : null"
+                                (click)="$event.stopPropagation()"
+                                [checked]="selection.isSelected(row)"
+                                color="primary">
+                  </mat-checkbox>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- End Checkbox Column -->
+
+            <!-- Amount Columns -->
+            <ng-container *ngIf="column.type === 'amount'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  [ngClass]="column.cssClasses"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div [innerHTML]="row[column.property]|currency:(
+                    column?.config?.amount?.format ?
+                    column?.config?.amount?.format
+                    :
+                    'EUR'
+                  )"></div>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- Amount Column -->
+                    
+            <!-- Object Columns -->
+            <ng-container *ngIf="column.type === 'object'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  [ngClass]="column.cssClasses"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div [innerHTML]="row[column.property]|formatObject:row:(
+                    column?.config?.object?.format ?
+                    column?.config?.object?.format
+                    :
+                    ''
+                  )"></div>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- Object Column -->
+                    
+            <!-- Attachment Columns -->
+            <ng-container *ngIf="column.type === 'attachment'" [matColumnDef]="column.property">
+              <ng-container *ngIf="column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell mat-sort-header> {{ column.label }}</th>
+              </ng-container>
+              <ng-container *ngIf="!column?.sortable">
+                <th *matHeaderCellDef class="uppercase" mat-header-cell> {{ column.label }}</th>
+              </ng-container>
+              <td *matCellDef="let row"
+                  class="text-primary"
+                  [ngClass]="column.cssClasses"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <ng-container *ngFor="let attachment of row[column.property]">
+                      <a [href]="attachment.downloadUrl|accessToken|async"
+                         [matTooltip]="'Cliquer pour télécharger : ' + attachment.name"
+                         target="_blank"
+                         [innerHTML]="(attachment.name.length > column?.config?.attachment?.maxLength ) ? (attachment.name | slice:0:column?.config?.attachment?.maxLength) + ' ..':(attachment.name)">
+                      </a> <br/>
+                  </ng-container>
+                </ng-container>
+              </td>
+            </ng-container>
+            <!-- Attachment Column -->
+
+            <!-- Action Column -->
+            <ng-container *ngIf="column.type === 'actions'" [matColumnDef]="column.property">
+              <th *matHeaderCellDef mat-header-cell></th>
+              <td *matCellDef="let row"
+                  class="w-10 text-secondary"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <button (click)="$event.stopPropagation()"
+                        [matMenuTriggerData]="{row,column}"
+                        [matMenuTriggerFor]="actionsMenu"
+                        mat-icon-button
+                        type="button">
+                  <mat-icon [svgIcon]="column?.config?.actions?.icon ?? 'mat:more_horiz'"></mat-icon>
+                </button>
+              </td>
+            </ng-container>
+            <!-- End Action Column -->
+
+            <!-- Contact Column --/>
+            <ng-container matColumnDef="contact">
+              <th *matHeaderCellDef mat-header-cell></th>
+              <td *matCellDef="let row"
+                  (click)="!isShimmering && column?.isRowClickActive !== false ? updateItemFunction(row, onFilterChange.bind(this)):null"
+                  mat-cell>
+                <ng-container *ngIf="!isShimmering; else textShimmering">
+                  <div class="flex">
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center hover:bg-hover text-primary bg-primary/10"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:phone"></mat-icon>
+                    </a>
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center hover:bg-hover text-primary bg-primary/10"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:phone"></mat-icon>
+                    </a>
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center hover:bg-hover text-primary bg-primary/10"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:phone"></mat-icon>
+                    </a>
+
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center ml-1 hover:bg-hover text-teal bg-teal-light"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:mail"></mat-icon>
+                    </a>
+
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center ml-1 hover:bg-hover text-teal bg-teal-light"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:mail"></mat-icon>
+                    </a>
+
+                    <a (click)="$event.stopPropagation()"
+                      class="w-8 h-8 leading-none flex items-center justify-center ml-1 hover:bg-hover text-green bg-green-light"
+                      mat-icon-button>
+                      <mat-icon class="icon-sm" svgIcon="mat:map"></mat-icon>
+                    </a>
+                  </div>
+                </ng-container>
+              </td>
+            </ng-container>
+            </!-- End Contact Column -->
+
+          </ng-container>
+          <!-- End Columns Looping -->
+
+          <tr *matHeaderRowDef="visibleColumns" mat-header-row></tr>
+          <tr *matRowDef="let row; columns: visibleColumns;"
+              @fadeInUp
+              class="hover:bg-hover trans-ease-out cursor-pointer"
+              mat-row
+              ></tr>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell text-center" [attr.colspan]="visibleColumns.length" *ngIf="hasStartedLoading">
+              {{ emptyDataText ?? 'Aucune donnée disponible pour les filtres renseignés.' }}
+            </td>
+          </tr>
+      </table>
+
+      <mat-paginator [length]="dataSource?.itemsCount$|async"
+                     [pageSizeOptions]="pageSizeOptions"
+                     [pageSize]="pageSize"
+                     class="sticky left-0"></mat-paginator>
+    </div>
+
+  </vex-page-layout-content>
+
+</vex-page-layout>
+
+<!-- Action menu -->
+<mat-menu #actionsMenu="matMenu" xPosition="before" yPosition="below">
+  <ng-template let-row="row" let-column="column" matMenuContent>
+    <ng-container *ngFor="let option of column?.config?.actions?.data??[]">
+      <button *ngIf="option.isVisible(row)"
+        color="primary"
+        mat-menu-item
+        type="button"
+        (click)="!isShimmering?option.click(row):null">
+        <mat-icon
+          [svgIcon]="option.icon">
+        </mat-icon>
+        <span [innerHTML]="option.label"></span>
+      </button>
+    </ng-container>
+  </ng-template>
+</mat-menu>
+<!-- End Action menu -->
+
+<!-- Column Filter menu -->
+<mat-menu #columnFilterMenu="matMenu" xPosition="before" yPosition="below">
+  <button (click)="toggleColumnVisibility(column, $event)" *ngFor="let column of columns"
+          class="checkbox-item mat-menu-item">
+    <mat-checkbox (click)="$event.stopPropagation()" [(ngModel)]="column.visible" color="primary">
+      {{ column.label }}
+    </mat-checkbox>
+  </button>
+</mat-menu>
+<!-- End Column Filter menu -->
+
+<!-- Export menu -->
+<mat-menu #exportOptionMenu="matMenu" xPosition="before" yPosition="below">
+  <button (click)="!isShimmering?option.click():null" *ngFor="let option of exportOptions"
+          class="checkbox-item mat-menu-item"
+          [innerHTML]="option.label">
+  </button>
+</mat-menu>
+<!-- End Export menu -->
+
+<ng-template #textShimmering>
+  <shimmer
+    height="25px"
+    [style]="(isDark$|async) ? shimmeringDarkModeColorConfig : shimmeringDefaultColorConfig"
+  ></shimmer>          
+</ng-template>
+
+<ng-template #imageShimmering>
+  <shimmer
+      width="25px"
+      height="25px"
+      borderRadius="8px"
+      [style]="(isDark$|async) ? shimmeringDarkModeColorConfig : shimmeringDefaultColorConfig"
+      ></shimmer>
+</ng-template>
+
+<ng-template #checkboxShimmering>
+  <shimmer
+      width="17px"
+      height="17px"
+      borderRadius="3px"
+      [style]="(isDark$|async) ? shimmeringDarkModeColorConfig : shimmeringDefaultColorConfig"
+      ></shimmer>
+</ng-template>
+
+<ng-template #imagePlaceholder>
+  <div class="avatar h-8 w-8 align-middle"></div>
+</ng-template>

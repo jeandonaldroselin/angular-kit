@@ -1,0 +1,100 @@
+<form (ngSubmit)="submit()"
+      [formGroup]="form"
+      autocomplete="off"
+      autocapitalize="off">
+  <div class="flex items-center" mat-dialog-title>
+    <ng-container *ngIf="inputData?.formConfig?.titleContent">
+      <h2 *ngIf="inputData?.formConfig?.titleContent"
+      class="headline m-0 flex-auto">{{  inputData?.formConfig?.titleContent }}</h2>
+    </ng-container>
+
+    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+
+  <mat-divider class="-mx-6 text-border"></mat-divider>
+
+  <mat-dialog-content class="mat-dialog-content flex flex-col pt-6 pr-6 pb-6 pl-6">
+    <ng-container *ngFor="let row of inputData?.formConfig?.rows">
+        <div class="flex flex-col sm:flex-row" *ngIf="row?.fields?.length > 1; else fieldRendering">
+          <ng-container 
+            *ngTemplateOutlet="fieldRendering;">
+          </ng-container>
+        </div>
+        <ng-template #fieldRendering>
+          <ng-container *ngFor="let field of row.fields; let i = index;" [ngSwitch]="field.type">
+
+            <!-- Text Field -->
+            <ng-container *ngSwitchCase="'text'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null" appearance="outline">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <input [formControlName]="field.name" matInput>
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- End Text Field -->
+
+            <!-- Select Field -->
+            <ng-container *ngSwitchCase="'select'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null" appearance="outline">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <mat-select [formControlName]="field.name">
+                      <mat-option *ngIf="field?.config?.select?.hasEmptyValue && !(field?.config?.select?.options === null || !field?.config?.select?.options.length)" [attr.selected]="!field.value"></mat-option>
+                      <mat-option
+                        *ngFor="let option of field?.config?.select?.options"
+                        [attr.disabled]="option?.disabled"
+                        [attr.hidden]="option?.visible"
+                        [value]="option.value">
+                        {{ option.label }}
+                      </mat-option>
+                  </mat-select>
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- End Select Field -->
+
+            <!-- Async Select Field -->
+            <ng-container *ngSwitchCase="'asyncSelect'">
+              <app-async-select class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null"
+                [errorTemplate]="null"
+                [field]="field"
+                [appearance]="'outline'"
+                [control]="form.get(field.name)"
+                [loadingMethod]="field?.config?.asyncSelect?.loadingMethod"
+                [loadingText]="field?.config?.asyncSelect?.loadingText"
+                [dataSourceFn]="field?.config?.asyncSelect?.dataSourceFn"
+                [dataSourceMappingFn]="field?.config?.asyncSelect?.dataSourceMappingFn"
+                [hintText]="field?.hintText"
+                >
+              </app-async-select>
+            </ng-container>
+            <!-- End Async Select Field -->
+
+            <!-- Date Field -->
+            <ng-container *ngSwitchCase="'date'">
+              <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null" appearance="outline">
+                <mat-label>{{ field.label }}</mat-label>
+                <input matInput [matDatepicker]="picker" [formControlName]="field.name">
+                <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </ng-container>
+            <!-- End Date Field -->
+
+          </ng-container>
+        </ng-template>
+    </ng-container>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">{{ inputData?.formConfig?.cancelButtonText }}</button>
+    <button mat-button mat-dialog-close type="submit"color="primary" mat-flat-button>{{ inputData?.formConfig?.confirmButtonText }}</button>
+  </mat-dialog-actions>
+</form>

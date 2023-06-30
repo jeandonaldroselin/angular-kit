@@ -1,0 +1,16 @@
+<div class="preview">
+    <img [src]="data?.id?(data.previewUrl|accessToken|async):data.previewUrl" *ngIf="isDisplayable(); else noVisual"/>
+    <ng-template #noVisual>
+        <div class="not-displayable">
+            {{ data?data.name:'' }}
+        </div>
+    </ng-template>
+    <span class="delete-button" (click)="delete()">
+        <mat-icon [svgIcon]="'mat:delete'"></mat-icon>
+        
+    </span>
+</div>
+<div class="info" [matTooltip]="data?data.name:''">
+    <a [href]="data?.downloadUrl|accessToken|async" target="_blank" *ngIf="data?.id; else default">{{ data?.name }}</a>
+    <ng-template #default>{{ data?.name }}</ng-template>
+</div>

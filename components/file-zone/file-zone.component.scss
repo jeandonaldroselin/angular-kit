@@ -1,0 +1,22 @@
+:host {
+    height: 110px;
+    width: 100%;
+    .file-zone {
+        width: 100%;
+        height: 110px;
+        display: flex;
+        flex-direction: row;
+        margin-bottom: 30px;
+        overflow-x: scroll;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        // Hide scrollbars
+        -ms-overflow-style: none;  /* IE and Edge */
+        scrollbar-width: none;  /* Firefox */
+
+        &::-webkit-scrollbar {
+            // Hide scrollbars on Chrome, Safari and Opera
+            display: none;
+        }
+    }
+}

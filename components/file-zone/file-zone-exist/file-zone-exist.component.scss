@@ -1,0 +1,78 @@
+:host {
+    background-color: rgba(211, 222, 241, .15);
+    height: 98px;
+    width: 110px;
+    min-width: 110px;
+    margin-right: 20px;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    -webkit-box-shadow: 0px 1px 1px 0px rgba(0,0,0,.25); 
+    box-shadow: 0px 1px 1px 0px rgba(0,0,0,.25);
+
+    .delete-button {
+        margin-top: -71px;
+        margin-left: 82px;
+        cursor: pointer;
+        display: flex;
+        height: 23px;
+        width: 23px;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+
+        mat-icon {
+            font-size: 15px;
+            color: #FC3636;
+            background: rgb(255, 255, 255);
+            height: auto;
+            width: auto;
+            border-radius: 20px;
+            padding: 4px;
+            -webkit-box-shadow: 0px 2px 2px 0px rgba(0,0,0,.25); 
+            box-shadow: 0px 2px 2px 0px rgba(0,0,0,.25);
+        }
+    }
+
+    .preview {
+        flex: 1;
+        overflow: hidden;
+
+        img {
+            max-width: 100%;
+            height: 100%;
+            border-radius: 4px 4px 0px 0px;
+            min-width: 100%;
+            min-height: 100%;
+        }
+
+        .not-displayable {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            background: white;
+            font-size: 12px;
+            overflow: hidden;
+            width: 100%;
+            text-align: center;
+            flex-direction: row;
+            justify-content: center;
+        }
+    }
+
+    .info {
+        flex: 1;
+        height: 25px;
+        min-height: 25px;
+        max-height: 25px;
+        overflow: hidden;
+        background-color: rgb(255, 255, 255);
+        font-size: 10px;
+        font-weight: 400;
+        padding: 0 5px;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+}

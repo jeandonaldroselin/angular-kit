@@ -1,0 +1,28 @@
+<form [formGroup]="formGroup" enctype="multipart/form-data" class="import-filezone">
+  <ngx-dropzone (change)="select($event)">
+    <ngx-dropzone-label class="import-filezone__upload__label">
+      <mat-icon class="sau-mat-icon">
+        cloud_upload
+      </mat-icon>
+      Déposer le fichier ici ou cliquer pour sélectionner un fichier
+    </ngx-dropzone-label>
+    <ngx-dropzone-preview class="import-filezone__upload__preview" [removable]="true" (removed)="remove(formGroup.value?.uploadFile)" *ngIf="formGroup.value?.uploadFile">
+      <ngx-dropzone-label>{{ formGroup.value?.uploadFile?.name }}</ngx-dropzone-label>
+    </ngx-dropzone-preview>
+  </ngx-dropzone>
+
+  <div class="import-filezone__buttons">
+    <button mat-flat-button
+             (click)="startImport()"
+            [disabled]="!formGroup.value?.uploadFile || loading">Importer</button>
+    <mat-progress-spinner
+        class="import-filezone__buttons__spinner"
+        [mode]="'indeterminate'"
+        [diameter]="20"
+        [strokeWidth]="3"
+        *ngIf="loading">
+    </mat-progress-spinner>
+  </div>
+
+  <hr>
+</form>

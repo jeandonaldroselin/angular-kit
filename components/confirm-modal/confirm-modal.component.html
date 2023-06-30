@@ -1,0 +1,6 @@
+<h1 mat-dialog-title>{{data.titleContent}}</h1>
+<div mat-dialog-content [innerHTML]="data.bodyContent"></div>
+<div mat-dialog-actions>
+  <button mat-button [mat-dialog-close]="confirmModalChoiceEnum.cancel" color="default" *ngIf="data.cancelButtonText">{{ data.cancelButtonText }}</button>
+  <button mat-button [mat-dialog-close]="confirmModalChoiceEnum.confirm" color="primary">{{ data.confirmButtonText }}</button>
+</div>

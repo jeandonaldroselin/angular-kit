@@ -1,0 +1,13 @@
+<div class="file-zone" #fileZone>
+    <app-file-zone-exist  *ngFor="let file of localFiles; let i = index;"
+                          (onDelete)="delete($event, i)"
+                          [data]="file"
+                          [disabled]="disabled"
+                          [confirmDelete]="confirmDelete"></app-file-zone-exist>
+    <app-file-zone-add    (onChoose)="choose($event)"
+                          [accept]="accept"
+                          [maxFileSize]="maxFileSize"
+                          [disabled]="disabled"
+                          [multiple]="multiple"
+                          *ngIf="(!multiple && localFiles?.length === 0) || !!multiple"></app-file-zone-add>
+</div>

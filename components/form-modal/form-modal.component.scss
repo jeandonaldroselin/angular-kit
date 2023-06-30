@@ -1,0 +1,22 @@
+:host {
+    @media (max-width: 600px) {
+        .field {
+            margin-left: 0;
+        }
+    }
+
+    .file-label {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        position: initial;
+
+        mat-icon {
+            margin: 0 12px 0 13px;
+        }
+    }
+
+    .file-field {
+        height: 175px;
+    }
+}

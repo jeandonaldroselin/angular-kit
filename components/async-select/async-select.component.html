@@ -1,0 +1,35 @@
+<mat-form-field [floatLabel]="isLoading || (!isOpen && control.value === null) ? 'never' : 'auto'" [appearance]="appearance">
+    <mat-label *ngIf="isLoading; else defaultLabel">
+		<div class="select-placeholder-container">
+			<span>{{ field.label + ' (' + loadingText + ')' }}</span>
+			<mat-spinner class="spinner" diameter="20"></mat-spinner>
+		</div>
+    </mat-label>
+
+    <ng-template #defaultLabel>
+        <mat-label>{{ field.label }}</mat-label>
+    </ng-template>
+
+    <mat-select #selectControl (openedChange)="openChanged($event)" [panelClass]="isLoading || !isOpen ? 'hide-dummy-option' : ''"
+	 [formControl]="control">
+		<mat-option *ngIf="options === null || !options?.length" disabled></mat-option>
+		<mat-option *ngFor="let option of options" [value]="option.id" [disabled]="option?.disabled">
+			{{option.label}}
+		</mat-option>
+        <mat-option *ngIf="field?.config?.asyncSelect?.hasEmptyValue && !(options === null || !options?.length)"></mat-option>
+	</mat-select>
+
+    <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+    
+    <mat-error *ngFor="let error of control?.errors | keyvalue">
+        <ng-container
+          *ngIf="errorTemplate"
+          [ngTemplateOutletContext]="{field,error}"
+          [ngTemplateOutlet]="errorTemplate">
+        </ng-container>
+    </mat-error>
+
+    <mat-hint *ngIf="hintText && !control.value && options?.length">
+        {{ hintText }}
+    </mat-hint>
+</mat-form-field>

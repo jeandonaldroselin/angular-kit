@@ -1,0 +1,212 @@
+<form (ngSubmit)="submit()"
+      [formGroup]="form"
+      [attr.enctype]="inputData?.formConfig?.enctype"
+      autocomplete="off"
+      autocapitalize="off">
+  <div class="flex items-center" mat-dialog-title>
+
+    <ng-container *ngIf="['simple', undefined].includes(inputData?.formConfig?.titleType)">
+      <h2 *ngIf="inputData?.formConfig?.titleContent"
+      class="headline m-0 flex-auto">{{  inputData?.formConfig?.titleContent }}</h2>
+    </ng-container>
+
+    <ng-container *ngIf="inputData?.formConfig?.titleType === 'field-content'">
+      <h2 *ngIf="inputData?.formConfig?.titleContent"
+      class="headline m-0 flex-auto">
+        <ng-container *ngFor="let fieldAsTitle of inputData?.formConfig?.titleContent">
+          {{ form.get(fieldAsTitle)?.value }}
+        </ng-container>
+      </h2>
+    </ng-container>
+
+    <button [matMenuTriggerFor]="settingsMenu" class="text-secondary" mat-icon-button type="button" *ngIf="inputData?.formConfig?.options?.length > 0">
+      <mat-icon svgIcon="mat:more_vert"></mat-icon>
+    </button>
+
+    <button class="text-secondary" mat-dialog-close mat-icon-button type="button">
+      <mat-icon svgIcon="mat:close"></mat-icon>
+    </button>
+  </div>
+
+  <mat-divider class="-mx-6 text-border"></mat-divider>
+
+  <mat-dialog-content class="mat-dialog-content flex flex-col pt-6">
+    <ng-container *ngFor="let row of inputData?.formConfig?.rows">
+        <div class="flex flex-col sm:flex-row" *ngIf="row?.fields?.length > 1; else fieldRendering">
+          <ng-container 
+            *ngTemplateOutlet="fieldRendering;">
+          </ng-container>
+        </div>
+        <ng-template #fieldRendering>
+          <ng-container *ngFor="let field of row.fields; let i = index;" [ngSwitch]="field.type">
+
+            <!-- Text Field -->
+            <ng-container *ngSwitchCase="'text'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <input [formControlName]="field.name" matInput>
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-error *ngFor="let error of form.get(field.name)?.errors | keyvalue">
+                    <ng-container
+                      [ngTemplateOutletContext]="{field,error}"
+                      [ngTemplateOutlet]="fieldErrorTemplate">
+                    </ng-container>
+                  </mat-error>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- End Text Field -->
+
+            <!-- Number Field -->
+            <ng-container *ngSwitchCase="'number'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <input [formControlName]="field.name" matInput type="number" step="1" min="1">
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-error *ngFor="let error of form.get(field.name)?.errors | keyvalue">
+                    <ng-container
+                      [ngTemplateOutletContext]="{field,error}"
+                      [ngTemplateOutlet]="fieldErrorTemplate">
+                    </ng-container>
+                  </mat-error>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- Number Text Field -->
+
+            <!-- Select Field -->
+            <ng-container *ngSwitchCase="'select'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <mat-select [formControlName]="field.name">
+                      <mat-option *ngIf="field?.config?.select?.hasEmptyValue && !(field?.config?.select?.options === null || !field?.config?.select?.options.length)" [attr.selected]="!field.value"></mat-option>
+                      <mat-option
+                        *ngFor="let option of field?.config?.select?.options"
+                        [attr.disabled]="option?.disabled"
+                        [attr.hidden]="option?.visible"
+                        [value]="option.value">
+                        {{ option.label }}
+                      </mat-option>
+                  </mat-select>
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-error *ngFor="let error of form.get(field.name)?.errors | keyvalue">
+                    <ng-container
+                      [ngTemplateOutletContext]="{field,error}"
+                      [ngTemplateOutlet]="fieldErrorTemplate">
+                    </ng-container>
+                  </mat-error>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- End Select Field -->
+
+            <!-- Async Select Field -->
+            <ng-container *ngSwitchCase="'asyncSelect'">
+              <app-async-select class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null"
+                [errorTemplate]="fieldErrorTemplate"
+                [field]="field"
+                [control]="form.get(field.name)"
+                [loadingMethod]="field?.config?.asyncSelect?.loadingMethod"
+                [loadingText]="field?.config?.asyncSelect?.loadingText"
+                [dataSourceFn]="field?.config?.asyncSelect?.dataSourceFn"
+                [dataSourceMappingFn]="field?.config?.asyncSelect?.dataSourceMappingFn"
+                [hintText]="field?.hintText"
+                >
+              </app-async-select>
+            </ng-container>
+            <!-- End Async Select Field -->
+
+            <!-- Textarea Field -->
+            <ng-container *ngSwitchCase="'textarea'">
+                <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null">
+                  <mat-label>{{ field.label }}</mat-label>
+                  <textarea [formControlName]="field.name" matInput></textarea>
+                  <mat-icon *ngIf="field.icon" class="mr-3" matPrefix [svgIcon]="field.icon"></mat-icon>
+                  <mat-error *ngFor="let error of form.get(field.name)?.errors | keyvalue">
+                    <ng-container
+                      [ngTemplateOutletContext]="{field,error}"
+                      [ngTemplateOutlet]="fieldErrorTemplate">
+                    </ng-container>
+                  </mat-error>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </mat-form-field>
+            </ng-container>
+            <!-- End Textarea Field -->
+
+            <!-- File Field -->
+            <ng-container *ngSwitchCase="'file'">
+              <div class="file-field">
+                  <div class="file-label">
+                    <mat-icon svgIcon="mat:attach_file"></mat-icon> <mat-label class="text-xs">{{ field.label }}</mat-label>
+                  </div>
+                    <app-file-zone class="mt-4 block" [control]="form?.get(field.name)"
+                    [accept]="field?.config?.file?.accept"
+                    [confirmDelete]="field?.config?.file?.confirmDelete"
+                    [multiple]="field?.config?.file?.multiple"
+                    ></app-file-zone>
+                  <mat-error *ngFor="let error of form.get(field.name)?.errors | keyvalue" class="text-xs">
+                    <ng-container
+                      [ngTemplateOutletContext]="{field,error}"
+                      [ngTemplateOutlet]="fieldErrorTemplate">
+                    </ng-container>
+                  </mat-error>
+                  <mat-hint *ngIf="field.hintText && !field.value">
+                      {{ field.hintText }}
+                  </mat-hint>
+                </div>
+            </ng-container>
+            <!-- End File Field -->
+
+            <!-- Hidden Field -->
+            <ng-container *ngSwitchCase="'hidden'">
+                  <input [formControlName]="field.name" type="hidden">
+            </ng-container>
+            <!-- End Hidden Field -->
+
+            <!-- Date Field -->
+            <ng-container *ngSwitchCase="'date'">
+              <mat-form-field class="flex-auto field" [ngClass]="field.colSize ? (i > 0 ? ' ml-'+field.colSize : '') : null">
+                <mat-label>{{ field.label }}</mat-label>
+                <input matInput [matDatepicker]="picker" [formControlName]="field.name">
+                <mat-datepicker-toggle matPrefix [for]="picker"></mat-datepicker-toggle>
+                <mat-datepicker #picker></mat-datepicker>
+              </mat-form-field>
+            </ng-container>
+            <!-- End Date Field -->
+
+          </ng-container>
+        </ng-template>
+    </ng-container>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close type="button">{{ inputData?.formConfig?.cancelButtonText }}</button>
+    <button mat-button mat-dialog-close type="submit"color="primary" mat-flat-button [disabled]="!isValid">{{ inputData?.formConfig?.confirmButtonText }}</button>
+  </mat-dialog-actions>
+</form>
+
+<mat-menu #settingsMenu="matMenu" xPosition="before" yPosition="below">
+  <ng-container *ngFor="let option of inputData?.formConfig?.options">
+    <button mat-menu-item (click)="option?.click(dialogRef)" *ngIf="option.isVisible()">
+      <mat-icon [svgIcon]="option.icon"></mat-icon>
+      <span>{{ option.label }}</span>
+    </button>
+  </ng-container>
+</mat-menu>
+
+<ng-template #fieldErrorTemplate let-field="field" let-error="error">
+  <ng-container *ngIf="['minlength', 'maxlength'].includes(error?.key); else defaultErrorMessage">
+    {{ field.validators[error?.key]?.errorMessage|formatString:({'0':error?.value?.requiredLength}) }}
+  </ng-container>
+  <ng-template #defaultErrorMessage>
+    {{ field.validators[error?.key]?.errorMessage }}
+  </ng-template>
+</ng-template>
